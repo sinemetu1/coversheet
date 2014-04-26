@@ -85,17 +85,14 @@ class TPSSubproc():
             total_size = int(request.headers['content-length'])
         
             for block in request.iter_content(block_size):
-                bytes_so_far += block_size
                 if not block:
-                    break
-                else:
-                    percent = (bytes_so_far / total_size) * 100
-                    self.update_download_progress(percent)
-
+                    continue
+                bytes_so_far += block_size
+                percent = (bytes_so_far / total_size) * 100
+                self.update_download_progress(percent)
                 handle.write(block)
 
-    def download_build(self, installdir='downloadedbuild',
-                       appname='firefox', macAppName='Minefield.app'):
+    def prepare_build(self, installdir='downloadedbuild', appname='firefox'):
         self.installdir = os.path.abspath(installdir)
         buildName = os.path.basename(self.url)
         pathToBuild = os.path.join(os.path.dirname(os.path.abspath(__file__)),
@@ -111,22 +108,12 @@ class TPSSubproc():
         # install the build
         print "installing %s" % pathToBuild
         shutil.rmtree(self.installdir, True)
-        mozinstall.install(pathToBuild, self.installdir)
+        installedat = mozinstall.install(pathToBuild, self.installdir)
 
         # remove the downloaded archive
         os.remove(pathToBuild)
 
-        # calculate path to binary
-        if mozinfo.isMac:
-          binary = '%s/%s/Contents/MacOS/%s-bin' % (installdir,
-                                                    macAppName,
-                                                    appname)
-        else:
-          binary = '%s/%s/%s%s' % (installdir,
-                                   appname,
-                                   appname,
-                                   '.exe' if mozinfo.isWin else '')
-
+        binary = mozinstall.get_binary(installedat, appname)
         return os.path.abspath(binary)
 
     def download_tests(self, installdir='downloadedtests'):
@@ -153,7 +140,7 @@ class TPSSubproc():
 
     def get_buildAndTests(self):
         if self.url is not None and ('http://' in self.url or 'ftp://' in self.url):
-            self.binary = self.download_build()
+            self.binary = self.prepare_build()
             self.tests = self.download_tests()
         else:
             self.binary = self.binary
