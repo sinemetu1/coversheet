@@ -108,12 +108,12 @@ class TPSSubproc():
         # install the build
         print "installing %s" % pathToBuild
         shutil.rmtree(self.installdir, True)
-        installedat = mozinstall.install(pathToBuild, self.installdir)
+        installed_at = mozinstall.install(pathToBuild, self.installdir)
 
         # remove the downloaded archive
         os.remove(pathToBuild)
 
-        binary = mozinstall.get_binary(installedat, appname)
+        binary = mozinstall.get_binary(installed_at, appname)
         return os.path.abspath(binary)
 
     def download_tests(self, installdir='downloadedtests'):
